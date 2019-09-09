@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src='https://api.mapbox.com/mapbox.js/v3.2.0/mapbox.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/v3.2.0/mapbox.css' rel='stylesheet' />
+  </head>
+  <body>
+
+    <div>
+      <h1>{{ worldborder.name }}</h1>
+    </div>
+
+    <div id='map' style='width: 100%; height: 800px;'></div>
+    <pre id='info'>FHIGOEANGOEIGNOII</pre>
+    <script>
+    L.mapbox.accessToken = "{{ mapbox_token }}";
+    var map = L.mapbox.map('map')
+    .setView([38, -102.0], 9)
+    .addLayer(L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v11'));
+
+    var multipolygon = JSON.parse('{{ country_mpoly | safe }}');
+    var polys = multipolygon.coordinates;
+    alert(polys[0][0].length);
+    for (var i = 0; i < polys[0][0].length; i++)  {
+      L.GeoJSON.coordsToLatLngs(polys[0][0][i]);
+    }
+    //var finalcoords = L.GeoJSON.coordsToLatLngs(polys);
+    var polygon = L.polygon(polys, {color: 'red'}).addTo(map);
+    map.fitBounds(polygon.getBounds());
+    </script>
+
+  </body>
+
+</html>
