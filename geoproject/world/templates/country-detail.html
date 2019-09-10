@@ -15,18 +15,15 @@
     <script>
     L.mapbox.accessToken = "{{ mapbox_token }}";
     var map = L.mapbox.map('map')
-    .setView([38, -102.0], 9)
     .addLayer(L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v11'));
 
     var multipolygon = JSON.parse('{{ country_mpoly | safe }}');
-    var polys = multipolygon.coordinates;
-    alert(polys[0][0].length);
-    for (var i = 0; i < polys[0][0].length; i++)  {
-      L.GeoJSON.coordsToLatLngs(polys[0][0][i]);
-    }
-    //var finalcoords = L.GeoJSON.coordsToLatLngs(polys);
-    var polygon = L.polygon(polys, {color: 'red'}).addTo(map);
+    var polygon = L.geoJSON(multipolygon).addTo(map);
+
     map.fitBounds(polygon.getBounds());
+    map.setMaxBounds(polygon.getBounds());
+    map.options.minZoom = map.getZoom(); //makes current zoom the minzoom
+
     </script>
 
   </body>
