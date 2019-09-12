@@ -80,8 +80,8 @@ DATABASES = {
     'default': {
          'ENGINE': 'django.contrib.gis.db.backends.postgis',
          'NAME': 'geodjango',
-         'USER': 'geodjango',
-         'PASSWORD': 'sdfsdf',
+         'USER': 'geo',
+         'PASSWORD': 'sdfsdfsdf',
          'HOST': 'localhost',
     },
 }
