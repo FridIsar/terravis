@@ -27,15 +27,7 @@ class WorldBorder(models.Model):
         return self.name
 
 class IsleifPoints(models.Model):
-    # Regular Django fields corresponding to the attributes in the
-    # world borders shapefile.
-    name = models.CharField(max_length=200)
-    lon = models.CharField(max_length=300)
-    lat = models.CharField(max_length=300)
-
-    # GeoDjango-specific: a geometry field (MultiPolygonField)
-    point = models.PointField()
-
-    # Returns the string representation of the model.
-    def __str__(self):              # __unicode__ on Python 2
-        return self.name
+    x = models.CharField(max_length=80, null=True)
+    y = models.CharField(max_length=80, null=True)
+    samtala = models.CharField(max_length=80, null=True)
+    geom = models.MultiPointField(srid=4326, null=True)

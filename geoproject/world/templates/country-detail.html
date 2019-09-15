@@ -6,6 +6,7 @@
   </head>
   <body>
 
+
     <div>
       <h1>{{ worldborder.name }}</h1>
     </div>
@@ -20,11 +21,23 @@
     var multipolygon = JSON.parse('{{ country_mpoly | safe }}');
     var polygon = L.geoJSON(multipolygon).addTo(map);
 
+    var points = {{ isleifpoints|safe }};
+    //console.log(JSON.parse(ar[0]));//bien pour l'instant mais à faire dans la bdd pour perfs
+    var polygon = L.geoJSON(multipolygon).addTo(map);
+    for (var i = 0; i < points.length; i++){
+      L.geoJSON(JSON.parse(points[i])).addTo(map);
+    }
+
     map.fitBounds(polygon.getBounds());
     map.setMaxBounds(polygon.getBounds());
     map.options.minZoom = map.getZoom(); //makes current zoom the minzoom
 
     </script>
+    <!-- {% for point in isleifpoints %}
+    <script type="text/javascript">
+      var pa = L.geoJSON(JSON.parse("{{ point.geom.geojson }}")).addTo(map);
+    </script>
+    {% endfor %} -->
 
   </body>
 
