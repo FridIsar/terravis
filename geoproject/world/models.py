@@ -27,7 +27,7 @@ class WorldBorder(models.Model):
         return self.name
 
 class IsleifPoints(models.Model):
-    x = models.CharField(max_length=80, null=True)
-    y = models.CharField(max_length=80, null=True)
+    # x = models.CharField(max_length=80, null=True)
+    # y = models.CharField(max_length=80, null=True)
     samtala = models.CharField(max_length=80, null=True)
-    geom = models.MultiPointField(srid=4326, null=True)
+    geom = models.PointField(srid=4326, null=True)

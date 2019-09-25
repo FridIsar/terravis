@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'geoproject.wsgi.application'
 DATABASES = {
     'default': {
          'ENGINE': 'django.contrib.gis.db.backends.postgis',
-         'NAME': 'terrabeta',
+         'NAME': 'terramap',
          'USER': 'geo',
          'PASSWORD': 'sdfsdfsdf',
          'HOST': 'localhost',
