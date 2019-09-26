@@ -6,122 +6,229 @@
 </head>
 <body>
 
+  <style>
+  #menu {
+    background: #fff;
+    position: absolute;
+    z-index: 1;
+    top: 10px;
+    right: 10px;
+    border-radius: 3px;
+    width: 120px;
+    border: 1px solid rgba(0,0,0,0.4);
+    font-family: 'Open Sans', sans-serif;
+  }
 
-  <div>
-    <h1>DRCPN</h1>
-  </div>
+  #menu a {
+    font-size: 13px;
+    color: #404040;
+    display: block;
+    margin: 0;
+    padding: 0;
+    padding: 10px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,0,0,0.25);
+    text-align: center;
+  }
 
-  <div id='map' style='width: 100%; height: 800px;'></div>
-  <pre id='info'>FHIGOEANGOEIGNOII</pre>
-  <script>
-  //console.log({{ isleifall|safe }});
-  mapboxgl.accessToken = "{{ mapbox_token }}";
-  var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/dark-v10',
-    center: [-18.2132123326599, 65.3060682237413],
-    zoom: 6
+  #menu a:last-child {
+    border: none;
+  }
+
+  #menu a:hover {
+    background-color: #f8f8f8;
+    color: #404040;
+  }
+
+  #menu a.active {
+    background-color: #3887be;
+    color: #ffffff;
+  }
+
+  #menu a.active:hover {
+    background: #3074a4;
+  }
+</style>
+
+
+<div>
+  <h1>DRCPN</h1>
+</div>
+
+<div id='map' style='width: 100%; height: 800px;'></div>
+<pre id='info'>FHIGOEANGOEIGNOII</pre>
+<nav id="menu"></nav>
+<script>
+mapboxgl.accessToken = "{{ mapbox_token }}";
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v10',
+  center: [-18.2132123326599, 65.0060682237413],
+  zoom: 6
+});
+
+// Create a popup, but don't add it to the map yet.
+var popup = new mapboxgl.Popup({
+  closeButton: false
+});
+
+map.on('load', function() {
+  // Add a new source from our GeoJSON data and set the
+  // 'cluster' option to true. GL-JS will add the point_count property to your source data.
+  var t1 = performance.now();
+  map.addSource("earthquakes", {
+    type: "geojson",
+    // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
+    // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
+    data: {{ isleifall|safe }}, // store on secure URL ? for perf
+    cluster: true,
+    clusterMaxZoom: 11, // Max zoom to cluster points on
+    clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+  });
+  var t2 = performance.now();
+  console.log(" "+(t2-t1)+" ms")
+
+  map.addLayer({
+    id: "clusters",
+    type: "circle",
+    source: "earthquakes",
+    filter: ["has", "point_count"],
+    paint: {
+      // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+      // with three steps to implement three types of circles:
+      //   * Blue, 20px circles when point count is less than 100
+      //   * Yellow, 30px circles when point count is between 100 and 750
+      //   * Pink, 40px circles when point count is greater than or equal to 750
+      "circle-color": [
+        "step",
+        ["get", "point_count"],
+        "#51bbd6",
+        100,
+        "#f1f075",
+        750,
+        "#f28cb1"
+      ],
+      "circle-radius": [
+        "step",
+        ["get", "point_count"],
+        20,
+        100,
+        30,
+        750,
+        40
+      ]
+    }
   });
 
-  map.on('load', function() {
-    // Add a new source from our GeoJSON data and set the
-    // 'cluster' option to true. GL-JS will add the point_count property to your source data.
-    var t1 = performance.now();
-    map.addSource("earthquakes", {
-      type: "geojson",
-      // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
-      // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
-      data: {{ isleifall|safe }},
-      cluster: true,
-      clusterMaxZoom: 11, // Max zoom to cluster points on
-      clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
-    });
-    var t2 = performance.now();
-    console.log(" "+(t2-t1)+" ms")
+  map.addLayer({
+    id: "cluster-count",
+    type: "symbol",
+    source: "earthquakes",
+    filter: ["has", "point_count"],
+    layout: {
+      "text-field": "{point_count_abbreviated}",
+      "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+      "text-size": 12
+    }
+  });
 
-    map.addLayer({
-      id: "clusters",
-      type: "circle",
-      source: "earthquakes",
-      filter: ["has", "point_count"],
-      paint: {
-        // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-        // with three steps to implement three types of circles:
-        //   * Blue, 20px circles when point count is less than 100
-        //   * Yellow, 30px circles when point count is between 100 and 750
-        //   * Pink, 40px circles when point count is greater than or equal to 750
-        "circle-color": [
-          "step",
-          ["get", "point_count"],
-          "#51bbd6",
-          100,
-          "#f1f075",
-          750,
-          "#f28cb1"
-        ],
-        "circle-radius": [
-          "step",
-          ["get", "point_count"],
-          20,
-          100,
-          30,
-          750,
-          40
-        ]
-      }
-    });
+  map.addLayer({
+    id: "unclustered-point",
+    type: "circle",
+    source: "earthquakes",
+    filter: ["!", ["has", "point_count"]],
+    paint: {
+      "circle-color": "#11b4da",
+      "circle-radius": 4,
+      "circle-stroke-width": 1,
+      "circle-stroke-color": "#fff"
+    }
+  });
 
-    map.addLayer({
-      id: "cluster-count",
-      type: "symbol",
-      source: "earthquakes",
-      filter: ["has", "point_count"],
-      layout: {
-        "text-field": "{point_count_abbreviated}",
-        "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-        "text-size": 12
-      }
-    });
+  // inspect a cluster on click
+  map.on('click', 'clusters', function (e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+    var clusterId = features[0].properties.cluster_id;
+    alert(clusterId);
+    map.getSource('earthquakes').getClusterExpansionZoom(clusterId, function (err, zoom) {
+      if (err)
+      return;
 
-    map.addLayer({
-      id: "unclustered-point",
-      type: "circle",
-      source: "earthquakes",
-      filter: ["!", ["has", "point_count"]],
-      paint: {
-        "circle-color": "#11b4da",
-        "circle-radius": 4,
-        "circle-stroke-width": 1,
-        "circle-stroke-color": "#fff"
-      }
-    });
-
-    // inspect a cluster on click
-    map.on('click', 'clusters', function (e) {
-      var features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-      var clusterId = features[0].properties.cluster_id;
-      map.getSource('earthquakes').getClusterExpansionZoom(clusterId, function (err, zoom) {
-        if (err)
-        return;
-
-        map.easeTo({
-          center: features[0].geometry.coordinates,
-          zoom: zoom
-        });
+      map.easeTo({
+        center: features[0].geometry.coordinates,
+        zoom: zoom
       });
     });
-
-    map.on('mouseenter', 'clusters', function () {
-      map.getCanvas().style.cursor = 'pointer';
-    });
-    map.on('mouseleave', 'clusters', function () {
-      map.getCanvas().style.cursor = '';
-    });
   });
-  </script>
-  <!-- for point in isleifpoints
-  <script type="text/javascript">
-  var pa = L.geoJSON(JSON.parse("{{ point.geom.geojson }}")).addTo(map);
+
+  // inspect a cluster on click
+  map.on('click', 'unclustered-point', function (e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ['unclustered-point'] });
+    // map.getSource('earthquakes').getClusterExpansionZoom(clusterId, function (err, zoom) {
+    //   if (err)
+    //   return;
+    //
+    //   map.easeTo({
+    //     center: features[0].geometry.coordinates,
+    //     zoom: zoom
+    //   });
+    // });
+    console.log(features[0].properties.samtala);
+  });
+
+  map.on('mouseenter', 'clusters', function () {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'clusters', function () {
+    map.getCanvas().style.cursor = '';
+  });
+
+  map.on('mouseenter', 'unclustered-point', function (e) {
+    map.getCanvas().style.cursor = 'pointer';
+    var feature = e.features[0];
+    popup.setLngLat(feature.geometry.coordinates)
+    .setText(feature.properties.samtala)
+    .addTo(map);
+  });
+  map.on('mouseleave', 'unclustered-point', function () {
+    map.getCanvas().style.cursor = '';
+    popup.remove();
+  });
+
+  var mapElems = ['clusters', 'cluster-count', 'unclustered-point'];
+
+  for (var i = 0; i < mapElems.length; i++) {
+    var id = mapElems[i];
+
+    var link = document.createElement('a');
+    link.href = '#';
+    link.className = 'active';
+    link.textContent = id;
+
+    link.onclick = function (e) {
+      var clickedLayer = this.textContent;
+      e.preventDefault();
+      e.stopPropagation();
+
+      var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+      if (visibility === 'visible') {
+        map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+        this.className = '';
+      } else {
+        this.className = 'active';
+        map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+      }
+    };
+
+    var layers = document.getElementById('menu');
+    layers.appendChild(link);
+  }
+});
+</script>
+<!-- for point in isleifpoints
+<script type="text/javascript">
+var pa = L.geoJSON(JSON.parse("{{ point.geom.geojson }}")).addTo(map);
 </script>
 endfor -->
 
